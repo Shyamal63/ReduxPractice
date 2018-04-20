@@ -6,6 +6,14 @@ import { StatusBar } from '@ionic-native/status-bar';
 
 import { MyApp } from './app.component';
 import { HomePage } from '../pages/home/home';
+import { NgRedux, DevToolsExtension, NgReduxModule } from '@angular-redux/store';
+import { IAppState } from './model';
+import { friendReducer } from './reducer';
+import { combineReducers } from 'redux';
+import { createLogger } from 'redux-logger';
+import { createEpicMiddleware } from 'redux-observable';
+import { FriendEpic } from './epic';
+import { HttpModule } from '@angular/http';
 
 @NgModule({
   declarations: [
@@ -14,6 +22,8 @@ import { HomePage } from '../pages/home/home';
   ],
   imports: [
     BrowserModule,
+    HttpModule,
+    NgReduxModule,
     IonicModule.forRoot(MyApp)
   ],
   bootstrap: [IonicApp],
@@ -24,7 +34,24 @@ import { HomePage } from '../pages/home/home';
   providers: [
     StatusBar,
     SplashScreen,
+    FriendEpic,
     {provide: ErrorHandler, useClass: IonicErrorHandler}
   ]
 })
-export class AppModule {}
+
+
+export class AppModule {
+
+
+  constructor( public store: NgRedux<IAppState>, public fepic:FriendEpic)
+    {
+      let rootReducer = combineReducers({
+        friend_list:friendReducer
+      });
+
+      store.configureStore(rootReducer,{},[createLogger(),createEpicMiddleware(fepic.getFriendList)]);
+
+    }
+
+
+}
